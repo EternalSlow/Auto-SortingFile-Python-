@@ -8,34 +8,34 @@ flag = threading.Event()
 flag1 = threading.Event()
 
 def SleepTimer(LabelVar,minut=0):
-    for minute in range(minut,0,-1):
+    for minute in range(minut,1,-1):
         if flag1.is_set():
             LabelVar.set("time: 00:00")
-            flag1.clear()
+            flag1.clear()   
             break
         for second in range(59,0,-1):
             flag.wait()
             if flag1.is_set():
                 break
             sleep(1)
+            print(minute,second)
             LabelVar.set(f"time: {minute-1}:{second}")
 
-def timer(restEntry,workEntry,cyclesEntry,LabelVar):
+
+def timer(EntryRest,EntryWork,EntryCycles,LabelVar):
     while(True):
         flag.wait()
-        rest = int(restEntry.get())
-        work = int(workEntry.get())
-        cycles = int(cyclesEntry.get())
+        rest = int(EntryRest.get())
+        work = int(EntryWork.get())
+        cycles = int(EntryCycles.get())
         for main in range(cycles):
             if flag1.is_set():
                 break
-            for workw in range(work):
-                SleepTimer(LabelVar,minut=work)
+            SleepTimer(LabelVar,minut=rest)
             mixer.music.play()
-            for restd in range(rest):
-                SleepTimer(LabelVar,minut=rest)
+            SleepTimer(LabelVar,minut=work)
             mixer.music.play()
-            flag.clear()
+        flag.clear()
 
 class GUI():
     def __init__(self, master):
@@ -55,43 +55,51 @@ class GUI():
 
         TimeFrame = Frame(self.master)
         EntryLabelFrame = Frame(self.master)
-        EntryFrame = Frame(EntryLabelFrame)
-        LabelFrame = Frame(EntryLabelFrame)
-        ButtonFrame = Frame(self.master)
+        FrameCycle = Frame(EntryLabelFrame)
+        FrameWork = Frame(EntryLabelFrame)
+        FrameRest = Frame(EntryLabelFrame)
+        FrameButton = Frame(self.master)
+
+        ButtonStart = Button(FrameButton,text="Start", command=flag.set)
+        ButtonClear = Button(FrameButton,text="Skip", command=flag1.set)
+        ButtonStop = Button(FrameButton,text="Stop",command=flag.clear)
         
-        ButtonStart = Button(ButtonFrame,text="Start", command=flag.set)
-        ButtonClear = Button(ButtonFrame,text="Clear", command=flag1.set)
-        ButtonStop = Button(ButtonFrame,text="Stop",command=flag.clear)
         phantomImage = ImageTk.PhotoImage(Image.new("RGB", (1,1), (0,0,1)))
+        
         LabelLine = Label(TimeFrame, image=phantomImage,bg="black", width=280, height=1)
         LabelVar = StringVar(value="time: 00:00")
-        LabelWork = Label(LabelFrame, text="work time")
-        LabelRest = Label(LabelFrame, text="rest time")
-        LabelCycle = Label(LabelFrame, text="cycle")
+        LabelCycle = Label(FrameCycle, text="cycle")
+        LabelWork = Label(FrameWork, text="work time")
+        LabelRest = Label(FrameRest, text="rest time")
         
-        workEntry = Entry(EntryFrame)
-        restEntry = Entry(EntryFrame)
-        cyclesEntry = Entry(EntryFrame)
+        EntryCycles = Entry(FrameCycle)
+        EntryWork = Entry(FrameWork)
+        EntryRest = Entry(FrameRest)
         LabelTimer = Label(TimeFrame,textvariable=LabelVar)
 
         TimeFrame.pack(side="top")
         EntryLabelFrame.pack(side="top")
-        EntryFrame.pack(side="right")
-        LabelFrame.pack(side="left")
-        ButtonFrame.pack(side="bottom")
+        FrameCycle.pack(side="top",fill="x")
+        FrameWork.pack(side="top",fill="x")
+        FrameRest.pack(side="top",fill="x")
+        FrameButton.pack(side="bottom")
+        
         LabelTimer.pack(side="top")
         LabelLine.pack(side="bottom")
-        LabelWork.pack(side="bottom")
-        LabelRest.pack(side="bottom")
-        LabelCycle.pack(side="bottom")
-        cyclesEntry.pack(side="bottom")
-        restEntry.pack(side="bottom")
-        workEntry.pack(side="bottom")
+        
+        LabelCycle.pack(side="left")
+        LabelWork.pack(side="left")
+        LabelRest.pack(side="left")
+        
+        EntryCycles.pack(side="right") # %
+        EntryWork.pack(side="right")
+        EntryRest.pack(side="right") # #
+        
         ButtonStart.pack(side="right", padx=10, pady=10)
         ButtonClear.pack(side="left", padx=10, pady=10)
         ButtonStop.pack(side="left", padx=10, pady=10)
 
-        target1 = threading.Thread(target=timer,daemon=True, args=[workEntry,restEntry,cyclesEntry,LabelVar])
+        target1 = threading.Thread(target=timer,daemon=True, args=[EntryWork,EntryRest,EntryCycles,LabelVar])
         target1.start()
 
         self.master.mainloop()
